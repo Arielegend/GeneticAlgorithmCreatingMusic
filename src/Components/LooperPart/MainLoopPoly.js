@@ -25,7 +25,7 @@ export function PolyLoop() {
 
     console.log("fixed notes... -> ", notes);
     synth = new Tone.PolySynth().toDestination();
-
+    synth.volume.value = -30;
     myLoop = new Tone.Loop(song, looperRapid);
 
     Tone.Transport.start(0);

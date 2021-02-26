@@ -15,7 +15,7 @@ export function FitnessInputs(props) {
       Default cost
       <input
         type="number"
-        onChange={(e) => setDefaultcost(e.target.value)}
+        onChange={(e) => setDefaultcost(Number(e.target.value))}
       ></input>
     </lable>
   );
@@ -25,7 +25,7 @@ export function FitnessInputs(props) {
       Propability
       <input
         type="number"
-        onChange={(e) => setDefaultPropability(e.target.value)}
+        onChange={(e) => setDefaultPropability(Number(e.target.value))}
       ></input>
     </lable>
   );

@@ -1,4 +1,4 @@
-import { Tone } from "tone/build/esm/core/Tone";
+import * as Tone from "tone";
 
 export const ColoredLineBig = ({ color }) => (
   <hr
@@ -48,8 +48,48 @@ export function customLog(message, color = "black") {
       color = "Orange";
       break;
     default:
-      color = color;
+      break;
   }
 
   console.log(`%c${message}`, `color:${color}`);
+}
+
+function getMidiNote(freq) {
+  return Tone.Frequency(freq, "midi").toNote();
+}
+
+export function playSequence(sequence) {
+  const synth = new Tone.PolySynth().toDestination();
+  const now = Tone.now();
+  let d = 0.5;
+  synth.volume.value = -15;
+
+  for (let i = 0; i < sequence.length; i++) {
+    let x = i % 3;
+    switch (x) {
+      case 1:
+        synth.triggerAttackRelease(
+          [getMidiNote(sequence[i])],
+          "4n",
+          now + i * d
+        );
+        break;
+
+      case 2:
+        synth.triggerAttackRelease(
+          [getMidiNote(sequence[i])],
+          "8n",
+          now + i * d
+        );
+        break;
+
+      default:
+        synth.triggerAttackRelease(
+          [getMidiNote(sequence[i])],
+          "2n",
+          now + i * d
+        );
+        break;
+    }
+  }
 }

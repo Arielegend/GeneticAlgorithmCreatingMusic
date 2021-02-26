@@ -1,31 +1,24 @@
-import { getRandomInt, customLog } from "./../utilities";
+import { getRandomInt } from "./../utilities";
 
 /*
-    sequence            // the part we eighther initialize randomly, or y sampling a givven input
-    items,              // the items that are being trained.. (output for each Gene)
-    geneItemsLength,    // the length of the items attribute
-    fitnessInput,       // {
-                              defaultcost:        // setting a cost of a Gene by default value
-                              defaultPropability: // the propability to do so (otherwise we go normal fittness)
-                           }
-    mateInput,          //{
-                             mateNumber: number of new chiuldren to create,
-                          }
-    mutateInput         //{
-                              mutateProp: the propability to mutate a specific Gene
-                              mutateNotesConst: if mutating - mutate to a note from this array 
-                          }   
+At creating Gene,
+We first build its goal.
+than, at creation of the Gene,
+At random and from given,
+after having goal, 
+we generate the Gene's Items at Random method. 
+(Only Once, at creating Population at begining.)
 */
 class Gene {
   constructor(
-    sequence,
+    sequenceGoal,
     items,
     geneItemsLength,
     fitnessInput,
     mateInput,
     mutateInput
   ) {
-    this.sequence = sequence;
+    this.sequence = sequenceGoal;
     this.cost = 999999;
     this.items = items;
     this.fitnessInput = fitnessInput;
@@ -54,7 +47,7 @@ class Gene {
     if (Math.random() > chanceToMutate) return;
 
     var index = Math.floor(Math.random() * this.items.length);
-    var mutateItem = this.getRandomNoteFromGivvenArray(
+    var mutateItem = this.getRandomNoteFromGivenArray(
       this.mutateInput.mutateNotesConst
     );
     var newItem = [];
@@ -65,20 +58,35 @@ class Gene {
     this.items = newItem;
   }
 
-  getRandomNoteFromGivvenArray(notesArray) {
+  //Helper Function.
+  //Recives an array of notes, return a single note from it.
+  //This function is being called at mutate function.
+  getRandomNoteFromGivenArray(notesArray) {
     return notesArray[getRandomInt(0, notesArray.length - 1)];
   }
 
-  crossOver(otheGene) {
+  /*
+  At Generation method, erach generation we take 2 highest members, and crossing between them.
+  Creating new kids, as requested under Mate Inputs to Algorithm.
+
+  We do it by randomly choosing pivot from first gene,
+  Concating it with the reverse of the second. 
+
+  At the end, we return an Array at length of desired new kids for each generation input,
+  Replacing that amount at the existing population, at each generation :)  
+*/
+  crossOver(otherGene) {
     let numOfNewKids = this.mateInput.mateNumber;
     let kids = [];
 
     for (let i = 0; i < numOfNewKids; i++) {
       var pivot = Math.round(this.items.length / 2) - 1;
-      let temp = this.items.slice(0, pivot).concat(otheGene.items.slice(pivot));
+      let temp = this.items
+        .slice(0, pivot)
+        .concat(otherGene.items.slice(pivot));
       kids.push(
         new Gene(
-          this.sequence,
+          this.sequenceGoal,
           temp,
           this.geneItemsLength,
           this.fitnessInput,
@@ -105,21 +113,16 @@ class Gene {
 }
 
 /*
-given size is length is input devided by 4
-const initialPopulationInputs  {
-      initalPoulationRandom: boolean,                 // start first population with random notes
-      minRandomValue: number, maxRandomValue: number, // if YES random -> MIDI values range to generate  
-
-      populationSize: number,                         // Population size
-      numberGeneration: number,                       // Number of generation
-
-      sizeOfSequenceOfGens: number,                   // how many cells to get at var Gene.sequence
-      geneItemsLength :number                          //the length of items Array (Length of output)
-                           }
+When calling Population constructor, we first check weather input as goal is RANDOM. 
+1. Random is True:
+                  Setting goal from range of given midi, at given length. 
+2. Random is False:
+                  Setting goal from Piano
 */
 class Population {
   constructor(
     goal,
+    initialGoalInputs,
     initialPopulationInputs,
     fitnessInput,
     mateInput,
@@ -131,9 +134,9 @@ class Population {
     this.mateInput = mateInput;
     this.mutateInput = mutateInput;
 
-    if (initialPopulationInputs.initalPoulationRandom === "true") {
+    if (initialGoalInputs.initalPoulationRandom) {
       this.setUpRandomPoulation(
-        goal,
+        initialGoalInputs,
         initialPopulationInputs,
         fitnessInput,
         mateInput,
@@ -149,6 +152,10 @@ class Population {
       );
     }
   }
+
+  /*
+User has givven goal to Algorithm using the piano.
+*/
   setUpPopulationFromGoal(
     goal,
     initialPopulationInputs,
@@ -158,24 +165,21 @@ class Population {
   ) {
     let populationSize = initialPopulationInputs.populationSize;
 
-    let geneSequenceLength = initialPopulationInputs.geneSequenceLength;
-
+    // Building population at size of populationSize variable.
     while (populationSize > 0) {
-      let { index1, index2 } = this.getRandomRange(
-        geneSequenceLength,
-        goal.length
-      );
-
-      let sequece = goal.slice(index1, index2);
       let geneItemsLength = initialPopulationInputs.geneItemsLength;
+
+      //Setting up new gene, with goal given by user,
+      //At Instancing, the 'Items' parameter of the Gene is empty array.
       var gene = new Gene(
-        sequece,
+        goal,
         [],
         geneItemsLength,
         fitnessInput,
         mateInput,
         mutateInput
       );
+      //Only after having goal, we intance new items for the gene, for the first time.
       gene.random();
       this.members.push(gene);
       populationSize -= 1;
@@ -183,7 +187,7 @@ class Population {
   }
 
   setUpRandomPoulation(
-    goal,
+    initialGoalInputs,
     initialPopulationInputs,
     fitnessInput,
     mateInput,
@@ -191,20 +195,23 @@ class Population {
   ) {
     let populationSize = initialPopulationInputs.populationSize;
     while (populationSize > 0) {
-      let newMember = this.getRandomMember(
-        initialPopulationInputs.minRandomValue,
-        initialPopulationInputs.maxRandomValue,
-        initialPopulationInputs.sizeOfSequenceOfGens
+      //Since we random buildong our population. Each gene will have its own random Goal (withing range of midis, and same length)
+      let newMemberGoal = this.getRandomMember(
+        initialGoalInputs.minRandomValue,
+        initialGoalInputs.maxRandomValue,
+        initialGoalInputs.geneSequenceLength
       );
+      //Setting up new gene, with goal given by getRandomMember,
+      //At Instancing, the 'Items' parameter of the Gene is empty array.
       let temp = new Gene(
-        newMember,
+        newMemberGoal,
         [],
         initialPopulationInputs.geneItemsLength,
         fitnessInput,
         mateInput,
         mutateInput
       );
-
+      //Only after having goal, we intance new items for the gene, for the first time.
       temp.random();
       this.members.push(temp);
 
@@ -212,27 +219,14 @@ class Population {
     }
   }
 
-  getRandomRange(geneSequenceLength, goalLength) {
-    if (geneSequenceLength === goalLength)
-      return { index1: 0, index2: goalLength - 1 };
-
-    let ok = true;
-
-    if (geneSequenceLength < goalLength) {
-      while (ok) {
-        let index1 = getRandomInt(0, goalLength - 1);
-        if (index1 + geneSequenceLength <= goalLength) {
-          return { index1: index1, index2: index1 + geneSequenceLength };
-        }
-      }
-    }
-  }
-
+  //Helper function
+  //Being called form Random creation.
+  //Returning an array representing random notes from range, at a given length.
   getRandomMember(min, max, sizeOfSequenceOfGens) {
     let newMember = [];
     let index = sizeOfSequenceOfGens;
     while (index > 0) {
-      newMember.push(this.getRandomInt(Number(min), Number(max)));
+      newMember.push(getRandomInt(Number(min), Number(max)));
       index -= 1;
     }
 
@@ -240,7 +234,6 @@ class Population {
   }
 
   sortMembersByCost() {
-    // array of objects
     this.members.sort(function (a, b) {
       return a.cost - b.cost;
     });
@@ -254,7 +247,6 @@ class Population {
 
     //Sorts the members by their costs..
     this.sortMembersByCost();
-    // this.printProcess();
 
     //after sorting the array
     //taking the two "best" scores
@@ -276,30 +268,15 @@ class Population {
       //refiitting
       this.members[i].fitness(this.goal);
 
-      //! QUESTION
-      //! Y THE ALGO WONT CONVERGE TO GOAL?
       if (this.members[i].items === this.goal) {
         //Entered here when reached a perfect shot at givven goal.
         //so we sort this generation (cause its good)
         //returning the 1 with best
         this.sortMembersByCost();
-        // this.printProcess();
         return true;
       }
     }
     this.generationNumber++;
-  }
-
-  printProcess() {
-    console.log("Generation:", this.generationNumber);
-    for (var i = 0; i < this.members.length; i++) {
-      console.log(
-        "Item:",
-        this.members[i].items,
-        ", Cost:",
-        this.members[i].cost
-      );
-    }
   }
 }
 

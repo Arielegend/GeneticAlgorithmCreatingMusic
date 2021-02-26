@@ -6,25 +6,21 @@ let synth;
 let myLoop;
 export function Loop() {
   function setup() {
-    // console.log("clicked on Play!");
-
-    // console.log("looperSynth -> ", looperSynth);
-    // console.log("looperNote -> ", looperNote);
-    // console.log("looperRapid -> ", looperRapid);
-    // console.log("noteDuration -> ", noteDuration);
-    // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
     switch (looperSynth) {
       case "AMFSynth":
         synth = new Tone.AMSynth().toDestination();
+        synth.volume.value = -30;
         break;
 
       case "MembraneSynth":
         synth = new Tone.MembraneSynth().toDestination();
+        synth.volume.value = -30;
         break;
 
       default:
         synth = new Tone.AMSynth().toDestination();
+        synth.volume.value = -30;
+
         break;
     }
 

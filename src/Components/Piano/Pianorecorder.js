@@ -1,10 +1,11 @@
 import React from "react";
-import ReactDOM from "react-dom";
+// import ReactDOM from "react-dom";
 import _ from "lodash";
-import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
+// Piano
+import { KeyboardShortcuts, MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 
-import DimensionsProvider from "./DimensionsProvider";
+// import DimensionsProvider from "./DimensionsProvider";
 import SoundfontProvider from "./SoundfontProvider";
 import PianoWithRecording from "./PianoWithRecording";
 
@@ -49,14 +50,22 @@ export default class PianoMan extends React.Component {
   };
 
   getDisplayer = (events) => {
-    return events.map((item) => {
-      return (
-        <div>
-          <label>Midi {item.midiNumber} </label>
-          <label>Time {item.time}</label>
-        </div>
-      );
+    let str = "";
+
+    events.map((item) => {
+      str += item.midiNumber + " ";
+      return "";
     });
+
+    return str;
+    // return events.map((item) => {
+    //   return (
+    //     <div>
+    //       <label>Midi {item.midiNumber} </label>
+    //       {/* <label>Time {item.time}</label> */}
+    //     </div>
+    //   );
+    // });
   };
 
   setRecording = (value) => {
@@ -69,6 +78,17 @@ export default class PianoMan extends React.Component {
         displayer: this.getDisplayer(value.events),
       });
     }
+  };
+
+  onClickSet = () => {
+    let notesToPlay = [];
+    let timesToPlay = [];
+    this.state.recording.events.forEach((noteEvent) => {
+      notesToPlay.push(noteEvent.midiNumber);
+      timesToPlay.push(noteEvent.time);
+    });
+    this.props.setNotes(notesToPlay);
+    return;
   };
 
   onClickPlay = () => {
@@ -122,7 +142,7 @@ export default class PianoMan extends React.Component {
   render() {
     return (
       <div style={{ marginLeft: "200px" }}>
-        <h1 className="h3">react-piano recording + playback demo</h1>
+        <h1 className="h3">React piano recorder</h1>
         <div className="mt-5">
           <SoundfontProvider
             instrumentName="acoustic_grand_piano"
@@ -146,9 +166,11 @@ export default class PianoMan extends React.Component {
           <button onClick={this.onClickPlay}>Play</button>
           <button onClick={this.onClickStop}>Stop</button>
           <button onClick={this.onClickClear}>Clear</button>
+          <button onClick={this.onClickSet}>Set</button>
         </div>
         <div className="mt-5">
           <strong>Recorded notes</strong>
+          {"\n"}
           {/* <div>{JSON.stringify(helper)}</div> */}
           {this.state.displayer}
         </div>

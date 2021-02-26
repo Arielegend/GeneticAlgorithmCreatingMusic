@@ -8,14 +8,14 @@ export const defalutMutateInput = {
 
 export function MutateInputs(props) {
   const [mutateProp, setMutateProp] = useState(0.5);
-  const [mutateNotesConst, setMutateNotesConst] = useState();
+  const [mutateNotesConst, setMutateNotesConst] = useState("60 62 66");
 
   const MutatePropability = (
     <div>
-      <label>Mutate propability</label>
+      <label>Mutate propability{""}</label>
       <input
         type="number"
-        onChange={(e) => setMutateProp(e.target.value)}
+        onChange={(e) => setMutateProp(Number(e.target.value))}
       />{" "}
     </div>
   );
@@ -27,7 +27,6 @@ export function MutateInputs(props) {
     if (mutateNotesConst.length > 0) {
       while (ok) {
         let num = Number(mutateNotesConst[index] + mutateNotesConst[index + 1]);
-        // console.log("num -> ", num);
 
         index = index + 3;
         notes.push(num);
@@ -43,7 +42,7 @@ export function MutateInputs(props) {
 
   const MutateNotes = (
     <div>
-      <label>Mutate Notes</label>
+      <label>Mutate Notes{""}</label>
       <input onChange={(e) => setMutateNotesConst(e.target.value)} />{" "}
     </div>
   );
